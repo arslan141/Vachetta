@@ -8,7 +8,7 @@ The admin user has been successfully created in the unified MongoDB database wit
 - **Email:** `admin@vachetta.com`
 - **Password:** `admin123`
 - **Role:** `admin` (RBAC-enabled)
-- **Database:** `vachetta-db` (unified database)
+- **Database:** `vachetta-ecom` (unified database)
 - **Status:** Active & Email Verified
 - **Auto-redirect:** `/admin` dashboard
 

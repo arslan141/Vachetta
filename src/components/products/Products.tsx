@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Images } from "./Images";
-import { SerializedProduct } from "@/types/types";
+import { SerializedProduct, EnrichedProducts } from "@/types/types";
 import dynamic from "next/dynamic";
 import { Skeleton } from "../ui/skeleton";
 import { Wishlists, getTotalWishlist } from "@/app/(carts)/wishlist/action";
@@ -23,15 +23,37 @@ const QuickAddToCart = dynamic(() => import("../cart/QuickAddToCart"), {
   loading: () => <Skeleton className="w-full h-8" />,
 });
 
+type ProductInput = SerializedProduct | EnrichedProducts;
+
+// Normalize any product-like item into a SerializedProduct for display components
+const toSerialized = (p: ProductInput): SerializedProduct => {
+  if ((p as SerializedProduct).description !== undefined) {
+    return p as SerializedProduct;
+  }
+  const ep = p as EnrichedProducts;
+  return {
+    _id: ep._id.toString(),
+    name: ep.name,
+    description: "", // EnrichedProducts has no description
+    price: ep.price,
+    category: ep.category,
+    image: ep.image,
+    variants: [],
+    quantity: ep.quantity,
+    purchased: ep.purchased,
+    productId: ep.productId.toString(),
+  };
+};
+
 export const Products = async ({
   products,
   extraClassname = "",
 }: {
-  products: SerializedProduct[];
+  products: ProductInput[];
   extraClassname: string;
 }) => {
   const session: Session | null = await getServerSession(authOptions);
-  const hasMissingQuantity = products.some((product) => !product.quantity);
+  const hasMissingQuantity = products.some((product: any) => !product.quantity);
   const wishlist =
     session?.user?.email && !hasMissingQuantity
       ? await getTotalWishlist()
@@ -52,7 +74,8 @@ export const Products = async ({
         ${extraClassname === "cart-ord-mobile" ? "grid-cols-1" : ""} sm:grid-cols-auto-fill-250`}
     >
       {products.map((product, index) => {
-        const { _id, name, image, price, category, productId, quantity } = product;
+        const serialized = toSerialized(product);
+        const { _id, name, image, price, category, productId, quantity } = serialized as SerializedProduct & { quantity?: number };
         
         return (
           <div
@@ -83,7 +106,7 @@ export const Products = async ({
                 </div>
 
                 {/* Only show cart-specific components for cart items */}
-                {isCartItem(product) ? (
+                {isCartItem(product as any) ? (
                   <DeleteButton product={product as any} />
                 ) : (
                   <WishlistButton
@@ -96,10 +119,10 @@ export const Products = async ({
 
               <div className="flex items-center justify-between">
                 {/* Only show ProductCartInfo for cart items */}
-                {isCartItem(product) ? (
+                {isCartItem(product as any) ? (
                   <ProductCartInfo product={product as any} />
                 ) : (
-                  <QuickAddToCart product={product} session={session} />
+                  <QuickAddToCart product={serialized} session={session} />
                 )}
               </div>
             </div>

@@ -59,28 +59,28 @@ docker-compose up -d
 
 ### **1. MongoDB Compass (GUI) - Recommended**
 - **Download**: [MongoDB Compass](https://www.mongodb.com/products/compass)
-- **Connection String**: `mongodb://localhost:27017/vachetta-db`
+- **Connection String**: `mongodb://localhost:27017/vachetta-ecom`
 - **Note**: No authentication required for development (RBAC is handled at application level)
 
 ### **2. MongoDB Shell (CLI)**
 ```bash
 # Connect using Docker exec (recommended)
-docker exec -it mongodb-local mongosh vachetta-db
+docker exec -it mongodb-local mongosh vachetta-ecom
 
 # Or connect from host (requires mongosh installed)
-mongosh "mongodb://localhost:27017/vachetta-db"
+mongosh "mongodb://localhost:27017/vachetta-ecom"
 ```
 
 ### **3. VS Code Extension**
 - **Install**: MongoDB for VS Code extension
 - **Connection String**: `mongodb://localhost:27017`
-- **Database**: Select `vachetta-db`
+- **Database**: Select `vachetta-ecom`
 
 ### **4. Application Connection (Current RBAC Setup)**
 Your current `.env.local` (perfect for RBAC):
 ```bash
 # RBAC-enabled connection (no separate admin database needed)
-MONGODB_URI="mongodb://localhost:27017/vachetta-db"
+MONGODB_URI="mongodb://localhost:27017/vachetta-ecom"
 ```
 
 ## 📊 **Common Docker Commands**

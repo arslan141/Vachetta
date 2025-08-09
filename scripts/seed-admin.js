@@ -64,7 +64,7 @@ async function seedAdminUser() {
 
     console.log('🔌 Connecting to main application database (RBAC)...');
     await mongoose.connect(MONGODB_URI);
-    console.log('✅ Connected to vachetta-db database (unified RBAC)');
+    console.log('✅ Connected to vachetta-ecom database (unified RBAC)');
 
     // RBAC Admin user details
     const adminEmail = 'admin@vachetta.com';
@@ -88,7 +88,7 @@ async function seedAdminUser() {
       console.log(`   Email: ${existingAdmin.email}`);
       console.log(`   Name: ${existingAdmin.name}`);
       console.log(`   Role: ${existingAdmin.role} (RBAC-enabled)`);
-      console.log(`   Database: vachetta-db (unified)`);
+      console.log(`   Database: vachetta-ecom (unified)`);
       console.log(`   Created: ${existingAdmin.createdAt}`);
     } else {
       // Hash the password
@@ -112,7 +112,7 @@ async function seedAdminUser() {
       console.log(`   Email: ${adminUser.email}`);
       console.log(`   Name: ${adminUser.name}`);
       console.log(`   Role: ${adminUser.role} (RBAC-enabled)`);
-      console.log(`   Database: vachetta-db (unified)`);
+      console.log(`   Database: vachetta-ecom (unified)`);
       console.log(`   Auto-redirect: /admin (RBAC routing)`);
       console.log(`   Created: ${adminUser.createdAt}`);
     }

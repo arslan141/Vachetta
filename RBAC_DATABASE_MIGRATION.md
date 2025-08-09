@@ -2,7 +2,7 @@
 
 ## ✅ **Migration to Unified RBAC Architecture Complete**
 
-The Vachetta platform has been successfully migrated from separate admin database architecture to a unified Role-Based Access Control (RBAC) system with the new `vachetta-db` database.
+The Vachetta platform has been successfully migrated from separate admin database architecture to a unified Role-Based Access Control (RBAC) system with the new `vachetta-ecom` database.
 
 ## 🔄 **What Changed**
 
@@ -13,9 +13,9 @@ The Vachetta platform has been successfully migrated from separate admin databas
 - ❌ Harder to manage user relationships
 
 ### **After: Unified RBAC Approach**
-- ✅ Single `vachetta-db` database
+- ✅ Single `vachetta-ecom` database
 - ✅ All users in one collection with `role` field
-- ✅ Simple connection string: `mongodb://localhost:27017/vachetta-db`
+- ✅ Simple connection string: `mongodb://localhost:27017/vachetta-ecom`
 - ✅ Role-based access control at application level
 - ✅ Easy user management and scalability
 
@@ -62,15 +62,15 @@ The Vachetta platform has been successfully migrated from separate admin databas
 ## 🎯 **Current Status**
 
 ### **✅ Verified Working**
-- **Database**: Single `vachetta-db` database
+- **Database**: Single `vachetta-ecom` database
 - **Admin User**: `admin@vachetta.com` with `role: 'admin'`
 - **Customer Users**: Regular users with `role: 'customer'` (default)
 - **RBAC System**: Full role-based access control implemented
 - **Auto-routing**: Admin users redirect to `/admin`, customers to `/`
 
 ### **🔌 Connection Info**
-- **Database**: `vachetta-db`
-- **Connection**: `mongodb://localhost:27017/vachetta-db`
+- **Database**: `vachetta-ecom`
+- **Connection**: `mongodb://localhost:27017/vachetta-ecom`
 - **Collections**: `users`, `products`, `orders`, `leatherproducts`
 - **Authentication**: Application-level RBAC (no database auth needed for dev)
 
@@ -103,7 +103,7 @@ The Vachetta platform has been successfully migrated from separate admin databas
 ### **Database Verification**
 ```bash
 # Check admin user exists with correct role
-docker exec mongodb-local mongosh vachetta-db --eval "db.users.findOne({email: 'admin@vachetta.com'}, {email: 1, role: 1})"
+docker exec mongodb-local mongosh vachetta-ecom --eval "db.users.findOne({email: 'admin@vachetta.com'}, {email: 1, role: 1})"
 
 # Expected output:
 # { email: 'admin@vachetta.com', role: 'admin' }
@@ -112,9 +112,9 @@ docker exec mongodb-local mongosh vachetta-db --eval "db.users.findOne({email: '
 ### **Connection Test**
 ```bash
 # Test unified database connection
-docker exec mongodb-local mongosh vachetta-db --eval "db.getName()"
+docker exec mongodb-local mongosh vachetta-ecom --eval "db.getName()"
 
-# Expected output: vachetta-db
+# Expected output: vachetta-ecom
 ```
 
 ## 📋 **Next Steps**

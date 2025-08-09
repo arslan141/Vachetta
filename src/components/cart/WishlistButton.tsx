@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import { Wishlists, delItem, addItem } from "@/app/(carts)/wishlist/action";
-import { Schema } from "mongoose";
 import { Session } from "next-auth";
 import { toast } from "sonner";
 
@@ -12,48 +11,74 @@ interface WishlistButtonProps {
   wishlistString: string;
 }
 
-const WishlistButton = ({
-  session,
-  productId,
-  wishlistString,
-}: WishlistButtonProps) => {
-  const id: Schema.Types.ObjectId = useMemo(
-    () => JSON.parse(productId),
-    [productId]
-  );
+const WishlistButton = ({ session, productId, wishlistString }: WishlistButtonProps) => {
+  // Local optimistic state (null = untouched, boolean = override)
+  const [optimistic, setOptimistic] = useState<boolean | null>(null);
 
-  const isFavorite = useMemo(() => {
-    if (session?.user && wishlistString) {
-      const wishlist: Wishlists = JSON.parse(wishlistString);
-      return wishlist.items.some(
-        (wishlistProduct) =>
-          wishlistProduct.productId.toString() === id.toString()
-      );
+  // Normalize product id (productId prop may be a raw string or a JSON stringified value)
+  const normalizedId = useMemo(() => {
+    try {
+      const parsed = JSON.parse(productId);
+      if (typeof parsed === "string") return parsed;
+      if (parsed && typeof parsed === "object" && "toString" in parsed) return parsed.toString();
+    } catch (_) {
+      // ignore parse error, fallback to original
     }
-    return false;
-  }, [session, wishlistString, id]);
+    return productId;
+  }, [productId]);
+
+  // Safely parse wishlist JSON
+  const wishlistItems = useMemo(() => {
+    if (!wishlistString) return [] as Array<{ productId: any }>;
+    try {
+      const parsed = JSON.parse(wishlistString);
+      if (Array.isArray(parsed?.items)) return parsed.items;
+      // Some backends might just send the array directly
+      if (Array.isArray(parsed)) return parsed;
+      return [];
+    } catch (e) {
+      console.warn("Invalid wishlist JSON payload", e);
+      return [];
+    }
+  }, [wishlistString]);
+
+  const computedIsFavorite = useMemo(() => {
+    if (!session?.user) return false;
+    return wishlistItems.some((w: { productId: any }) => String(w.productId) === String(normalizedId));
+  }, [session, wishlistItems, normalizedId]);
+
+  const isFavorite = optimistic !== null ? optimistic : computedIsFavorite;
 
   const handleFavorites = useCallback(async () => {
-    if (session?.user?._id) {
-      if (isFavorite) {
-        await delItem(id);
-      } else {
-        await addItem(id);
-      }
-    } else {
-      const warningMessage =
-        "You must be registered to be able to add a product to the wishlist.";
-      console.warn(warningMessage);
+    if (!session?.user?._id) {
+      const warningMessage = "You must be registered to be able to add a product to the wishlist.";
       toast.warning(warningMessage);
+      return;
     }
-  }, [session, isFavorite, id]);
+
+    // Optimistic toggle
+    setOptimistic(!isFavorite);
+    try {
+      if (isFavorite) {
+        await delItem(normalizedId as any);
+        toast.success("Removed from wishlist");
+      } else {
+        await addItem(normalizedId as any);
+        toast.success("Added to wishlist");
+      }
+    } catch (error) {
+      console.error("Wishlist update failed", error);
+      setOptimistic(null); // rollback
+      toast.error("Wishlist action failed. Try again.");
+    }
+  }, [session, isFavorite, normalizedId]);
 
   return (
     <button
       onClick={handleFavorites}
       title={isFavorite ? "Remove from favorites" : "Add to favorites"}
     >
-      {isFavorite ? (
+  {isFavorite ? (
         <svg
           data-testid="geist-icon"
           height="16"

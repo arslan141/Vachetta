@@ -87,6 +87,7 @@ export interface ProductDocument extends Document {
   category: string;
   sizes: [string];
   image: [string];
+  images?: Array<{ url: string; alt?: string; isPrimary?: boolean }>;
   variants: [VariantsDocument];
   quantity: number;
   productId: Schema.Types.ObjectId;

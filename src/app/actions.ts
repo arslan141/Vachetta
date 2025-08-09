@@ -4,7 +4,6 @@ import { Product } from "@/models/Products";
 import LeatherProduct from "@/models/LeatherProduct";
 import { EnrichedProducts, SerializedProduct } from "@/types/types";
 import { cache } from 'react';
-import { mockProducts } from "@/data/mock-products";
 import { vachettaProducts } from "@/data/vachetta-products";
 
 // Cache database connection
@@ -12,7 +11,7 @@ const getCachedConnection = cache(async () => {
   return await connectDB();
 });
 
-// Convert vachetta products to SerializedProduct format
+// Convert vachetta products to SerializedProduct format (lightweight client-friendly)
 const convertVachettaToSerializedProducts = (products: typeof vachettaProducts): SerializedProduct[] => {
   return products.map(product => ({
     _id: product._id?.toString() || '',
@@ -22,12 +21,30 @@ const convertVachettaToSerializedProducts = (products: typeof vachettaProducts):
     category: product.category || 'leather',
     image: [product.images?.[0]?.url || "/main-image.webp"] as [string],
     variants: [],
-    sizes: product.availableSizes || [],
+    // sizes intentionally omitted (no size data in vachetta seed objects)
     quantity: 0,
     purchased: false,
     productId: product._id?.toString() || ''
   }));
 };
+
+// Helper: convert SerializedProduct[] to EnrichedProducts[] by adding required legacy/cart fields
+const serializedToEnriched = (items: SerializedProduct[]): EnrichedProducts[] => {
+  return items.map((p): EnrichedProducts => ({
+    name: p.name,
+    category: p.category,
+    image: (Array.isArray(p.image) ? [Array.isArray(p.image) && typeof p.image[0] === 'string' ? p.image[0] as string : '/main-image.webp'] : ['/main-image.webp']) as [string],
+    price: p.price,
+    purchased: Boolean(p.purchased),
+    color: 'default',
+    size: 'default',
+    quantity: p.quantity ?? 1,
+    productId: p._id as any,
+    _id: p._id as any,
+    variantId: 'default'
+  }));
+};
+
 
 async function getProductsFromCollection(model: any, query: object, limit?: number): Promise<any[]> {
   const isConnected = await getCachedConnection();
@@ -59,6 +76,7 @@ async function getProductsFromCollection(model: any, query: object, limit?: numb
       price: 1,
       category: 1,
       image: 1,
+      images: 1,
       variants: 1,
       _id: 1
     }).lean();
@@ -69,14 +87,31 @@ async function getProductsFromCollection(model: any, query: object, limit?: numb
     
     const products = await queryBuilder;
     
-    return products.map((product: any) => ({
-      ...product,
-      _id: product._id.toString(),
-      variants: product.variants ? product.variants.map((variant: any) => ({
-        ...variant,
-        _id: variant._id ? variant._id.toString() : variant._id,
-      })) : [],
-    }));
+    return products.map((product: any) => {
+      // Normalize image data into both image (string[]) and images (object[]) forms
+      let imagesObjects: { url: string }[] = [];
+      if (Array.isArray(product.images) && product.images.length && product.images[0]?.url) {
+        imagesObjects = product.images.map((o: any) => ({ url: o.url }));
+      } else if (Array.isArray(product.image)) {
+        imagesObjects = product.image.map((u: string) => ({ url: u }));
+      } else if (typeof product.image === 'string') {
+        imagesObjects = [{ url: product.image }];
+      }
+      const imageStrings = imagesObjects.map(o => o.url);
+      const normalizedVariants = product.variants && product.variants.length > 0
+        ? product.variants.map((variant: any) => ({
+            ...variant,
+            _id: variant._id ? variant._id.toString() : variant._id,
+          }))
+        : [];
+      return {
+        ...product,
+        _id: product._id.toString(),
+        image: imageStrings,
+        images: imagesObjects,
+        variants: normalizedVariants,
+      };
+    });
   } catch (error) {
     console.error("Database query failed:", error);
     console.log("Falling back to Vachetta products");
@@ -91,7 +126,13 @@ async function getProductsFromCollection(model: any, query: object, limit?: numb
       price: product.basePrice || 0,
       category: product.category || 'leather',
       image: product.images?.[0]?.url || "/main-image.webp",
-      variants: []
+      variants: [
+        {
+          priceId: `${product._id?.toString() || 'fallback'}-default`,
+          color: 'Natural',
+          images: [product.images?.[0]?.url || "/main-image.webp"]
+        }
+      ]
     }));
   }
 }
@@ -135,30 +176,48 @@ export const getProduct = cache(async (id: string) => {
   }
 
   try {
-    let product: any = await Product.findById(id).lean();
+  let product: any = await Product.findById(id).lean();
     if (!product) {
       product = await LeatherProduct.findById(id).lean();
     }
     if (!product) {
       return null;
     }
+    // Normalize images (both forms)
+    let imagesObjects: { url: string }[] = [];
+    if (Array.isArray(product.images) && product.images.length && product.images[0]?.url) {
+      imagesObjects = product.images.map((o: any) => ({ url: o.url }));
+    } else if (Array.isArray(product.image)) {
+      imagesObjects = product.image.map((u: string) => ({ url: u }));
+    } else if (typeof product.image === 'string') {
+      imagesObjects = [{ url: product.image }];
+    }
+    const imageStrings = imagesObjects.map(o => o.url);
+    const normalizedVariants = product.variants && product.variants.length > 0
+      ? product.variants.map((variant: any) => ({
+          ...variant,
+          _id: variant._id ? variant._id.toString() : variant._id,
+        }))
+      : [];
     return {
       ...product,
       _id: product._id.toString(),
-      variants: product.variants ? product.variants.map((variant: any) => ({
-        ...variant,
-        _id: variant._id ? variant._id.toString() : variant._id,
-      })) : [],
+      image: imageStrings,
+      images: imagesObjects,
+      variants: normalizedVariants,
     };
   } catch (error) {
     console.error("Database query failed:", error);
-    console.log("Falling back to mock products for ID:", id);
-    const mockProduct = mockProducts.find(p => p._id.toString() === id);
-    if (mockProduct) {
+    console.log("Falling back to vachetta products for ID:", id);
+    const vachetta = vachettaProducts.find(p => p._id?.toString() === id);
+    if (vachetta) {
       return {
-        ...mockProduct,
-        _id: mockProduct._id.toString(),
-        image: mockProduct.image[0] || "/main-image.webp",
+        _id: vachetta._id?.toString() || '',
+        name: vachetta.name || 'Leather Product',
+        description: vachetta.description || '',
+        price: vachetta.basePrice || 0,
+        category: vachetta.category || 'leather',
+        image: vachetta.images?.[0]?.url || "/main-image.webp",
         variants: []
       };
     }
@@ -197,9 +256,9 @@ export const getRandomProducts = cache(async (excludeId: string, limit = 6): Pro
   // If database is not connected, return vachetta products excluding the specified ID
   if (!isConnected) {
     console.log("Database not available, using Vachetta products for random selection");
-    const converted = convertVachettaToSerializedProducts(vachettaProducts);
-    const filtered = converted.filter(p => p._id.toString() !== excludeId);
-    return filtered.slice(0, limit) as EnrichedProducts[];
+  const converted = convertVachettaToSerializedProducts(vachettaProducts);
+  const filtered = converted.filter((p) => p._id.toString() !== excludeId);
+  return serializedToEnriched(filtered).slice(0, limit);
   }
 
   try {
@@ -264,9 +323,9 @@ export const getRandomProducts = cache(async (excludeId: string, limit = 6): Pro
     return allProducts;
   } catch (error) {
     console.error("Database query failed:", error);
-    console.log("Falling back to mock products for random selection");
-    const converted = convertMockToEnrichedProducts(mockProducts);
-    const filtered = converted.filter(p => p._id.toString() !== excludeId);
-    return filtered.slice(0, limit);
+  console.log("Falling back to vachetta products for random selection");
+  const converted = convertVachettaToSerializedProducts(vachettaProducts);
+  const filtered = converted.filter((p) => p._id.toString() !== excludeId);
+  return serializedToEnriched(filtered).slice(0, limit);
   }
 });

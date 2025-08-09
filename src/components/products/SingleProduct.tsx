@@ -3,7 +3,7 @@
 import { ProductImages } from "@/components/products/ProductImages";
 import { ProductDocument, VariantsDocument } from "@/types/types";
 import { Session } from "next-auth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -42,7 +42,48 @@ export const SingleProduct = ({ pr,product, session }: SingleProduct) => {
     }
   }, [productPlainObject.variants, selectedVariant]);
 
-  if (!product) {
+  // Build a unified images array with objects { url } for ProductImages component
+  const resolvedImages = useMemo(() => {
+    // Case 1: pr.images already an array of objects with url (take only first)
+    if (Array.isArray(pr?.images) && pr.images.length && pr.images[0]?.url) {
+      return [pr.images[0]] as Array<{url: string}>;
+    }
+    
+    // Case 2: productPlainObject.images (from parsed JSON) (take only first)
+    if (Array.isArray(productPlainObject?.images) && productPlainObject.images.length && productPlainObject.images[0]?.url) {
+      return [productPlainObject.images[0]] as Array<{url: string}>;
+    }
+    
+    // Case 3: pr.image is an array of strings (take only first)
+    if (Array.isArray(pr?.image)) {
+      return [{ url: pr.image[0] }];
+    }
+    
+    // Case 4: productPlainObject.image as array of strings (take only first)
+    if (Array.isArray(productPlainObject?.image)) {
+      return [{ url: productPlainObject.image[0] }];
+    }
+    
+    // Case 5: pr.image single string
+    if (typeof pr?.image === 'string') {
+      return [{ url: pr.image }];
+    }
+    
+    // Case 6: productPlainObject.image single string
+    if (typeof productPlainObject?.image === 'string') {
+      return [{ url: productPlainObject.image }];
+    }
+    
+    // Case 7: fallback to selectedVariant images (take only first)
+    if (selectedVariant?.images && selectedVariant.images.length > 0) {
+      return [{ url: selectedVariant.images[0] }];
+    }
+    
+    // Final fallback
+    return [{ url: '/main-image.webp' }];
+  }, [pr, productPlainObject, selectedVariant]);
+
+  if (!productPlainObject) {
     return <div>Product not found</div>;
   }
 
@@ -52,7 +93,7 @@ export const SingleProduct = ({ pr,product, session }: SingleProduct) => {
         <ProductImages
           name={productPlainObject.name}
           selectedVariant={selectedVariant}
-          im={pr.images || []}
+          im={resolvedImages}
         />
       </div>
 
@@ -74,7 +115,7 @@ export const SingleProduct = ({ pr,product, session }: SingleProduct) => {
           />
         </div>
 
-        <Accordion type="single" collapsible className="w-full">
+        {/* <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1">
             <AccordionTrigger className="text-sm">COMPOSITION</AccordionTrigger>
             <AccordionContent>
@@ -115,7 +156,7 @@ export const SingleProduct = ({ pr,product, session }: SingleProduct) => {
               <p>Made in Portugal</p>
             </AccordionContent>
           </AccordionItem>
-        </Accordion>
+        </Accordion> */}
       </div>
     </div>
   );

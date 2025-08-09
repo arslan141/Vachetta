@@ -45,7 +45,7 @@ export default async function RootLayout({
           />
           <main className="pointer-events-auto">
             {children}
-            <Toaster position="top-right" />
+            <Toaster position="top-right" duration={1500} />
             <Analytics />
             <SpeedInsights />
           </main>

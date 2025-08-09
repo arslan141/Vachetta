@@ -41,6 +41,12 @@ const ProductSchema: Schema = new Schema<ProductDocument>({
     type: [String],
     required: true,
   },
+  // Support richer image objects coming from legacy / seed scripts
+  images: [{
+    url: { type: String },
+    alt: { type: String },
+    isPrimary: { type: Boolean }
+  }],
   variants: {
     type: [VariantsSchema],
     required: true,

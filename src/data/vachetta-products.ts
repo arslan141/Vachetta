@@ -1,9 +1,9 @@
-import { Types } from "mongoose";
 import { LeatherProductDocument } from "@/types/types";
 
-export const vachettaProducts: Partial<LeatherProductDocument>[] = [
+// Use plain string IDs to avoid compile-time mismatches with differing ObjectId type definitions
+export const vachettaProducts: Array<Omit<Partial<LeatherProductDocument>, '_id'> & { _id: string }> = [
   {
-    _id: new Types.ObjectId("676000000000000000000001"),
+    _id: "676000000000000000000001",
     name: "Artisanal Leather Briefcase",
     description: "A sophisticated handcrafted briefcase made from premium Italian leather. Perfect for professionals who appreciate timeless elegance and superior craftsmanship. Features multiple compartments for organization and a removable shoulder strap.",
     category: "bags",
@@ -96,7 +96,7 @@ export const vachettaProducts: Partial<LeatherProductDocument>[] = [
     totalReviews: 0
   },
   {
-    _id: new Types.ObjectId("676000000000000000000002"),
+    _id: "676000000000000000000002",
     name: "Handcrafted Leather Wallet",
     description: "A minimalist bi-fold wallet crafted from supple leather. Features card slots, a bill compartment, and optional coin pocket. The perfect blend of functionality and style for everyday carry.",
     category: "wallets",
@@ -175,7 +175,7 @@ export const vachettaProducts: Partial<LeatherProductDocument>[] = [
     totalReviews: 0
   },
   {
-    _id: new Types.ObjectId("676000000000000000000003"),
+    _id: "676000000000000000000003",
     name: "Artisan Leather Belt",
     description: "A sturdy full-grain leather belt with hand-stitched edges. Available in multiple widths and buckle styles. Built to last a lifetime with proper care and develops a beautiful patina with age.",
     category: "belts",
@@ -242,7 +242,7 @@ export const vachettaProducts: Partial<LeatherProductDocument>[] = [
     totalReviews: 0
   },
   {
-    _id: new Types.ObjectId("676000000000000000000004"),
+    _id: "676000000000000000000004",
     name: "Vintage Messenger Bag",
     description: "A spacious messenger bag inspired by vintage postal bags. Features adjustable strap, magnetic closures, and interior pockets for laptops and documents. Perfect for students and creative professionals.",
     category: "bags",
@@ -309,7 +309,7 @@ export const vachettaProducts: Partial<LeatherProductDocument>[] = [
     totalReviews: 0
   },
   {
-    _id: new Types.ObjectId("676000000000000000000005"),
+    _id: "676000000000000000000005",
     name: "Leather Card Holder",
     description: "A slim and elegant card holder perfect for minimalists. Holds 4-6 cards comfortably while maintaining a sleek profile. Available in various leather types and colors.",
     category: "wallets",
@@ -369,7 +369,7 @@ export const vachettaProducts: Partial<LeatherProductDocument>[] = [
     totalReviews: 0
   },
   {
-    _id: new Types.ObjectId("676000000000000000000006"),
+    _id: "676000000000000000000006",
     name: "Leather Watch Strap",
     description: "Premium leather watch straps handcrafted to fit standard watch lugs. Available in multiple widths and leather types. Features quick-release pins for easy installation.",
     category: "accessories",
@@ -436,7 +436,7 @@ export const vachettaProducts: Partial<LeatherProductDocument>[] = [
     totalReviews: 0
   },
   {
-    _id: new Types.ObjectId("676000000000000000000007"),
+    _id: "676000000000000000000007",
     name: "Artisan Leather Tote",
     description: "A spacious and elegant tote bag perfect for daily use. Features reinforced handles, interior pockets, and a zippered closure. Ideal for work, shopping, or travel.",
     category: "bags",
@@ -503,7 +503,7 @@ export const vachettaProducts: Partial<LeatherProductDocument>[] = [
     totalReviews: 0
   },
   {
-    _id: new Types.ObjectId("676000000000000000000008"),
+    _id: "676000000000000000000008",
     name: "Custom Leather Journal Cover",
     description: "A personalized leather cover for your favorite journal or notebook. Features pen holder, card slots, and custom embossing options. Perfect for writers, artists, and professionals.",
     category: "accessories",

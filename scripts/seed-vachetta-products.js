@@ -226,7 +226,7 @@ async function seedProducts() {
 
     console.log('🔌 Connecting to MongoDB...');
     await mongoose.connect(MONGODB_URI);
-    console.log('✅ Connected to vachetta-db database');
+    console.log('✅ Connected to vachetta-ecom database');
 
     // Clear existing products
     console.log('🧹 Clearing existing products...');

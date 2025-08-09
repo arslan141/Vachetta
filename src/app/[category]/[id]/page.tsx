@@ -21,6 +21,15 @@ const capitalizeFirstLetter = (string: string) => {
 
 export async function generateMetadata({ params }: Props) {
   const product: ProductDocument = await getProduct(params.id);
+  
+  // Handle case where product is not found
+  if (!product) {
+    return {
+      title: "Product Not Found | Ecommerce Template",
+      description: "The requested product could not be found.",
+    };
+  }
+  
   const capitalizedName = capitalizeFirstLetter(product.name);
 
   return {
