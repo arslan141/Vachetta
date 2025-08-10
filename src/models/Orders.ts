@@ -12,7 +12,7 @@ import { Schema, model, models } from "mongoose";
 
 const ProductsSchema = new Schema<ProductsDocument>({
   productId: {
-    type: Schema.Types.ObjectId,
+    type: String, // Changed from ObjectId to String to support Stripe product IDs
     required: true,
   },
   color: {
@@ -56,7 +56,8 @@ const AddressSchema = new Schema<AddressDocument>({
   },
 });
 
-const OrderSchema = new Schema<OrderDocument>({
+// Using untyped Schema to allow extended dynamic fields (status, invoiceUrl)
+const OrderSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -94,6 +95,19 @@ const OrderSchema = new Schema<OrderDocument>({
     type: String,
     default: generateRandomOrderNumber,
   },
+  status: {
+    type: String,
+    enum: ['pending','paid','mock'],
+    default: 'pending'
+  },
+  invoiceUrl: {
+    type: String,
+    required: false
+  },
+  localInvoicePath: {
+    type: String,
+    required: false
+  }
 });
 
 const OrdersSchema = new Schema<OrdersDocument>({

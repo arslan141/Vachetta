@@ -3,7 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import Providers from "./Providers";
 import { Navbar } from "../components/common/Navbar";
 import { Footer } from "../components/common/Footer";
-import { Analytics } from "@vercel/analytics/react";
+// import { track } from '@vercel/analytics';
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
 import { Session, getServerSession } from "next-auth";
@@ -46,7 +46,7 @@ export default async function RootLayout({
           <main className="pointer-events-auto">
             {children}
             <Toaster position="top-right" duration={1500} />
-            <Analytics />
+            {/* <Analytics /> */}
             <SpeedInsights />
           </main>
           <Footer />

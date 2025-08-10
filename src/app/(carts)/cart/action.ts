@@ -14,7 +14,7 @@ import { kv } from "@/libs/kv-utils";
 export type Cart = {
   userId: string;
   items: Array<{
-    productId: Schema.Types.ObjectId;
+    productId: string; // Changed from ObjectId to string to support Stripe product IDs
     size: string;
     variantId: string;
     quantity: number;

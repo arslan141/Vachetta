@@ -17,12 +17,14 @@ const ButtonCheckout = ({ cartWithProducts, session }: ButtonCheckoutProps) => {
 
   const lineItems = useMemo(
     () =>
-      cartWithProducts.map((cartItem: ItemDocument) => ({
+      cartWithProducts.map((cartItem: any) => ({
         productId: cartItem.productId,
         quantity: cartItem.quantity,
         variantId: cartItem.variantId,
         size: cartItem.size,
         color: cartItem.color,
+        price: cartItem.price, // needed for inline price_data fallback
+        name: cartItem.name || 'Item'
       })),
     [cartWithProducts]
   );

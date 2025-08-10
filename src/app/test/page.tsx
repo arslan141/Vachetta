@@ -21,7 +21,7 @@ export default async function TestPage() {
                 className="w-full h-48 object-cover mb-2"
               />
               <h3 className="font-semibold">{product.name}</h3>
-              <p className="text-gray-600">${product.price}</p>
+              <p className="text-gray-600">₹{product.price}</p>
               <p className="text-sm text-gray-500">{product.category}</p>
             </div>
           ))}

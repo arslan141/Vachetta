@@ -32,7 +32,8 @@
     "src/app/api/checkout_sessions/route.ts",
     "src/app/user/account/profile/page.jsx",
     "src/app/api/stripe/payment/route.ts",
-    "src/app/Providers.js"
+    "src/app/Providers.js",
+    "src/components/result/InvoiceStatus.tsx"
   ],
   "exclude": ["node_modules"]
 }

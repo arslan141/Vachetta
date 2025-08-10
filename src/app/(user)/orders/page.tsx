@@ -2,7 +2,6 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { OrderDocument, OrdersDocument } from "@/types/types";
 import { getUserOrders } from "./action";
-import { Suspense } from "react";
 import { Loader } from "@/components/common/Loader";
 import { Session, getServerSession } from "next-auth";
 import { authOptions } from "@/libs/auth";
@@ -17,17 +16,7 @@ const UserOrders = async () => {
   const session: Session | null = await getServerSession(authOptions);
 
   if (session?.user) {
-    return (
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center h-[calc(100vh-91px)]">
-            <Loader height={30} width={30} />
-          </div>
-        }
-      >
-        <Orders />
-      </Suspense>
-    );
+    return <Orders />;
   }
 
   return (
@@ -44,7 +33,17 @@ const UserOrders = async () => {
   );
 };
 
-const Orders = async () => {
+const statusIcon = (status: string) => {
+  switch (status) {
+    case 'paid': return '✅';
+    case 'mock': return '🧪';
+    case 'pending':
+    default: return '⏳';
+  }
+};
+
+const Orders = async ({ searchParams }: any) => {
+  const filter = (searchParams?.status || '').toLowerCase();
   const orders: OrdersDocument | undefined | null = await getUserOrders();
 
   if (orders === undefined || orders === null) {
@@ -64,9 +63,17 @@ const Orders = async () => {
     );
   }
 
+  const filtered = filter ? orders.orders.filter((o: any) => (o.status || 'pending').toLowerCase() === filter) : orders.orders;
   return (
-    <div className="grid items-center justify-between pt-12 grid-cols-auto-fill-350 gap-7">
-      {orders.orders.map((order: OrderDocument, index: number) => (
+    <div className="pt-12">
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <a href="/orders" className={`text-xs px-3 py-1 rounded border ${!filter ? 'bg-white text-black' : 'border-border-primary hover:bg-color-secondary'}`}>All</a>
+        <a href="/orders?status=paid" className={`text-xs px-3 py-1 rounded border ${filter==='paid' ? 'bg-white text-black' : 'border-border-primary hover:bg-color-secondary'}`}>Paid</a>
+        <a href="/orders?status=mock" className={`text-xs px-3 py-1 rounded border ${filter==='mock' ? 'bg-white text-black' : 'border-border-primary hover:bg-color-secondary'}`}>Mock</a>
+        <a href="/orders?status=pending" className={`text-xs px-3 py-1 rounded border ${filter==='pending' ? 'bg-white text-black' : 'border-border-primary hover:bg-color-secondary'}`}>Pending</a>
+      </div>
+      <div className="grid items-center justify-between grid-cols-auto-fill-350 gap-7">
+      {filtered.map((order: any, index: number) => (
         <div
           key={index}
           className="w-full transition duration-150 border border-solid rounded border-border-primary bg-background-secondary hover:bg-color-secondary"
@@ -76,16 +83,40 @@ const Orders = async () => {
               href={`/orders/${order._id}?items=${order.products.length}`}
               className="flex flex-col gap-2"
             >
-              <h4 className="font-semibold">{`${format(
-                order.purchaseDate,
-                "dd LLL yyyy"
-              )} | ₹{(order.total_price / 100).toFixed(
-                2
-              )} | Items: ${order.products.reduce(
-                (total, product) => total + product.quantity,
-                0
-              )} `}</h4>
+              {(() => {
+                // Better price handling - check if it's already in proper format
+                let amount = order.total_price || 0;
+                if (amount > 10000) {
+                  amount = amount / 100; // Convert from cents
+                }
+                
+                const itemsCount = Array.isArray(order.products) && order.products.length > 0 
+                  ? order.products.reduce((total: number, product: any) => total + (product?.quantity || 1), 0) 
+                  : 0;
+                
+                return (
+                  <div>
+                    <h4 className="font-semibold">{`${format(order.purchaseDate, "dd LLL yyyy")} | ₹${amount.toFixed(2)} | Items: ${itemsCount}`}</h4>
+                    {itemsCount === 0 && (
+                      <p className="text-xs text-red-500 mt-1">No items found in this order</p>
+                    )}
+                  </div>
+                );
+              })()}
               <p className="text-sm">Order number: {order.orderNumber}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded bg-gray-600 text-white ${order.status === 'paid' ? 'bg-green-600' : order.status === 'mock' ? 'bg-amber-600' : 'bg-gray-600'}`}>{statusIcon(order.status || 'pending')} {order.status || 'pending'}</span>
+                {(order.invoiceUrl || order.localInvoicePath) && (
+                  <a 
+                    href={order.localInvoicePath ? `/api/invoices/${order.localInvoicePath}` : order.invoiceUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-[10px] underline text-blue-400 hover:text-blue-300"
+                  >
+                    📄 Invoice PDF
+                  </a>
+                )}
+              </div>
             </Link>
             
             <div className="flex gap-2 mt-2">
@@ -95,18 +126,21 @@ const Orders = async () => {
               >
                 View Details
               </Link>
-              <a
-                href={`/api/invoice/${order._id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-amber-600 text-white px-3 py-2 rounded text-sm hover:bg-amber-700 transition-colors"
-              >
-                Invoice
-              </a>
+              {(order.invoiceUrl || order.localInvoicePath) && (
+                <a
+                  href={order.localInvoicePath ? `/api/invoices/${order.localInvoicePath}` : order.invoiceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-amber-600 text-white px-3 py-2 rounded text-sm hover:bg-amber-700 transition-colors"
+                >
+                  📄 Invoice
+                </a>
+              )}
             </div>
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 };

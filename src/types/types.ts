@@ -24,8 +24,8 @@ export interface EnrichedProducts {
   color: string;
   size: string;
   quantity: number;
-  productId: Schema.Types.ObjectId;
-  _id: Schema.Types.ObjectId;
+  productId: string; // Changed from ObjectId to string to support Stripe product IDs
+  _id: string; // Changed from ObjectId to string for consistency
   variantId: string;
 }
 
@@ -45,6 +45,9 @@ export interface OrderDocument {
   expectedDeliveryDate: Date;
   total_price: number;
   orderNumber: string;
+  status: 'pending' | 'paid' | 'mock';
+  invoiceUrl?: string;
+  localInvoicePath?: string;
   _id: Schema.Types.ObjectId;
 }
 
@@ -58,7 +61,7 @@ export interface AddressDocument {
 }
 
 export interface ProductsDocument {
-  productId: Schema.Types.ObjectId;
+  productId: string; // Changed from ObjectId to string to support Stripe product IDs
   image: string;
   color: string;
   size: string;
@@ -72,7 +75,7 @@ export interface FavoritesDocument extends Document {
 }
 
 export interface ItemDocument {
-  productId: Schema.Types.ObjectId;
+  productId: string; // Changed from ObjectId to string to support Stripe product IDs
   color: string;
   size: string;
   quantity: number;

@@ -65,6 +65,16 @@ const OrderProducts = async ({ id }: { id: string }) => {
               <span>Expected Delivery Date</span>{" "}
               <span>{format(order.expectedDeliveryDate, "dd LLL yyyy")}</span>
             </div>
+            <div className={bxInfoStyles}>
+              <span>Status</span>
+              <span className={`text-[11px] uppercase tracking-wide px-2 py-0.5 rounded bg-gray-600 text-white ${ (order as any).status === 'paid' ? 'bg-green-600' : (order as any).status === 'mock' ? 'bg-amber-600' : 'bg-gray-600'}`}>{(order as any).status || 'pending'}</span>
+            </div>
+            {(order as any).invoiceUrl && (
+              <div className={bxInfoStyles}>
+                <span>Invoice</span>
+                <a href={(order as any).invoiceUrl} target="_blank" rel="noopener noreferrer" className="underline text-xs">Download PDF</a>
+              </div>
+            )}
           </div>
           <div className="pt-10 mb-10 border-t border-solid border-border-primary">
             <h3 className={detailsH3Styles}>Delivery Address</h3>

@@ -283,6 +283,7 @@ export const getRandomProducts = cache(async (excludeId: string, limit = 6): Pro
           price: 1,
           category: 1,
           image: 1,
+          images: 1,
           variants: 1,
           _id: 1
         }}
@@ -296,6 +297,7 @@ export const getRandomProducts = cache(async (excludeId: string, limit = 6): Pro
           price: 1,
           category: 1,
           image: 1,
+          images: 1,
           variants: 1,
           _id: 1
         }}
@@ -304,21 +306,36 @@ export const getRandomProducts = cache(async (excludeId: string, limit = 6): Pro
 
     const allProducts = [...products, ...leatherProducts]
       .slice(0, limit)
-      .map((product: any) => ({
-        ...product,
-        _id: product._id.toString(),
-        productId: product._id.toString(), // Add productId for EnrichedProducts compatibility
-        variantId: 'default', // Add default variantId
-        purchased: false, // Add default purchased status
-        color: 'default', // Add default color
-        size: 'default', // Add default size  
-        quantity: 1, // Add default quantity
-        image: product.image && product.image.length > 0 ? [product.image[0]] : ['/main-image.webp'], // Ensure tuple format
-        variants: product.variants ? product.variants.map((variant: any) => ({
-          ...variant,
-          _id: variant._id ? variant._id.toString() : variant._id,
-        })) : [],
-      }));
+      .map((product: any) => {
+        // Handle image extraction - prioritize images array, then image array, then fallback
+        let imageUrl = '/main-image.webp'; // default fallback
+        
+        if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+          // Find primary image first, or use first image
+          const primaryImage = product.images.find((img: any) => img.isPrimary);
+          imageUrl = primaryImage ? primaryImage.url : product.images[0].url;
+        } else if (product.image && Array.isArray(product.image) && product.image.length > 0) {
+          imageUrl = product.image[0];
+        } else if (typeof product.image === 'string') {
+          imageUrl = product.image;
+        }
+
+        return {
+          ...product,
+          _id: product._id.toString(),
+          productId: product._id.toString(), // Add productId for EnrichedProducts compatibility
+          variantId: 'default', // Add default variantId
+          purchased: false, // Add default purchased status
+          color: 'default', // Add default color
+          size: 'default', // Add default size  
+          quantity: 1, // Add default quantity
+          image: [imageUrl], // Ensure tuple format with extracted image
+          variants: product.variants ? product.variants.map((variant: any) => ({
+            ...variant,
+            _id: variant._id ? variant._id.toString() : variant._id,
+          })) : [],
+        };
+      });
 
     return allProducts;
   } catch (error) {
